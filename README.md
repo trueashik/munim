@@ -43,8 +43,8 @@ To ensure a fully functional "Voice-First" experience with <500ms latency, the b
 ### Steps
 1.  Clone the repository:
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/munim-ai.git](https://github.com/YOUR_USERNAME/munim-ai.git)
-    cd munim-ai/frontend
+    git clone [https://github.com/trueashik/Munim.git](https://github.com/trueashik/Munim.git)
+    cd frontend
     ```
 
 2.  Build the Docker Image:
@@ -92,7 +92,7 @@ To ensure a fully functional "Voice-First" experience with <500ms latency, the b
 ## 📦 Tech Stack
 * **Backend:** n8n (AWS EC2)
 * **Database:** Supabase
-* **AI Model:** Gemini 1.5 Pro
+* **AI Model:** Gemini 3 Pro
 * **PDF Engine:** Gotenberg
 * **Frontend:** HTML5 / Tailwind CSS
 * **Containerization:** Docker
