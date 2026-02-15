@@ -43,7 +43,7 @@ To ensure a fully functional "Voice-First" experience with <500ms latency, the b
 ### Steps
 1.  Clone the repository:
     ```bash
-    git clone [https://github.com/trueashik/Munim.git](https://github.com/trueashik/Munim.git)
+    git clone https://github.com/trueashik/Munim.git
     cd frontend
     ```
 
