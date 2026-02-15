@@ -1,0 +1,2070 @@
+{
+  "name": "Get Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "register-user-neurathon",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        -560
+      ],
+      "id": "2aed51f7-d028-491b-8562-4691db7c912e",
+      "name": "Webhook",
+      "webhookId": "673d779e-85c4-49a5-ba4a-4bf9c126e3fa"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -560
+      ],
+      "id": "13ba947b-4afb-4f5e-88d8-dfd7e3c11186",
+      "name": "Search User",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1bce11b-ce7a-4227-9b43-c5b1c07e4407",
+              "leftValue": "={{ $('Search User').item.json.created_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        -560
+      ],
+      "id": "7b4e13c3-2006-4f4d-905f-5ffe87539651",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Munim, a careful and reliable business assistant.\nUser Message : {{ $('Text Merger').item.json.input }}\n\nYour task is to onboard a user by collecting exactly four details:\n1. User name\n2. Business name\n3. Mobile number\n4. UPI ID\n\nYou will always be given:\n- The latest user message :\n- Previous Conversation from Memory\n\nCRITICAL RULES (NO EXCEPTIONS):\n- NEVER assume, guess, auto-fill, or infer any value.\n- If the user provides \"0\", \"none\", \"-\", \"na\", empty text, or unclear values, treat them as NOT PROVIDED (null).\n- NEVER change or “correct” user input.\n- NEVER create a business name or personal detail on your own.\n- Always respect previously collected data and do not overwrite it unless the user clearly provides a new value.\n- Always ask user for single parameter at once like(name , business name at a time)\n- And also answer all general questions beautifully and clearly followed by the question that still need for registration.\n\nDATA HANDLING RULES:\n- If a value is already collected and valid, keep it as-is.\n- Only update fields explicitly mentioned in the latest user message.\n- Ask only for the missing fields.\n\nLANGUAGE & TONE RULES:\n- Reply in simple, friendly Hinglish.\n- Use common English words for business or technical terms (business, mobile number, UPI).\n- Avoid complex or formal Hindi words.\n- Do NOT use Hindi words with English meanings in brackets.\n- Keep sentences short, polite, and easy to understand.\n\nCONVERSATION STYLE:\n- Briefly explain who you are and why the information is needed.\n- Be friendly and professional.\n- Do not repeat already collected information in the reply.\n- Do not ask unnecessary questions.\n\nOUTPUT FORMAT:\nRespond ONLY in valid JSON using the structure below:\n\n{\n  \"thought\": \"<short reasoning about what information is still missing based on previous + current inputs>\",\n  \"reply_to_user\": \"<friendly Hinglish message asking only for missing details>\",\n  \"data_collected\": {\n    \"user_name\": <string or null>,\n    \"business_name\": <string or null>,\n    \"mobile_number\": <string or null>,\n    \"upi_id\": <string or null>\n  },\n  \"user_registered\": <true or false>\n}\n",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1792,
+        -800
+      ],
+      "id": "51394022-aea1-42e9-a87d-c8bd8495f7f8",
+      "name": "Onboard User"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -576
+      ],
+      "id": "e415203e-da29-48a0-be06-733675833d61",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "dovTcQCCKU0zDfa0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.1-405b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -576
+      ],
+      "id": "13428d00-002a-4e51-9b8e-4213f9b9895c",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "beFqjU4MXWzbdDG4",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=munim.ai-{{ $('Webhook').item.json.body.message.from.id }}",
+        "collectionName": "history",
+        "databaseName": "Chat",
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        -576
+      ],
+      "id": "f17c3773-231a-4cd7-b401-2349280c1e1d",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "7ULy7NtaZTeFYbPC",
+          "name": "MongoDB main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe552d12-0739-4d48-a00b-dc0e2d87d7a9",
+              "name": "BOT_TOKEN",
+              "value": "8207866153:AAF6GTVIErn7SzxKPAFqpZRL5GhuHNYSoUQ",
+              "type": "string"
+            },
+            {
+              "id": "c8b0612d-6cc9-4731-a836-a65dfceb0860",
+              "name": "GROQ_API_KEY",
+              "value": "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",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -560
+      ],
+      "id": "b6df589c-b983-4e0c-9578-2e98350445e0",
+      "name": ".env"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('.env').item.json.BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.from.id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.reply_to_user }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2416,
+        -704
+      ],
+      "id": "7867c2d8-e64a-4f7f-8490-1e229447ba9e",
+      "name": "Send Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// If your JSON is already an object, skip JSON.parse\nconst input = typeof $json.output === 'string'\n  ? JSON.parse($json.output)\n  : $json.output;\n\nreturn [\n  {\n    json: {\n      thought: input.thought,\n      reply_to_user: input.reply_to_user,\n      user_name: input.data_collected.user_name,\n      business_name: input.data_collected.business_name,\n      mobile_number: input.data_collected.mobile_number,\n      upi_id: input.data_collected.upi_id,\n      user_registered: input.user_registered\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -704
+      ],
+      "id": "9b1cea2f-872e-4ab3-9b1a-512beede144e",
+      "name": "Output Parser"
+    },
+    {
+      "parameters": {
+        "tableId": "users",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "telegram_chat_id",
+              "fieldValue": "={{ $('Webhook').item.json.body.message.chat.id }}"
+            },
+            {
+              "fieldId": "business_name",
+              "fieldValue": "={{ $('Output Parser').item.json.business_name }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Output Parser').item.json.user_name }}"
+            },
+            {
+              "fieldId": "upi-id",
+              "fieldValue": "={{ $('Output Parser').item.json.upi_id }}"
+            },
+            {
+              "fieldId": "mobile_number",
+              "fieldValue": "={{ $('Output Parser').item.json.mobile_number }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        -704
+      ],
+      "id": "aae31c3c-3674-4032-9f08-fc06e183e547",
+      "name": "Create user",
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ecc4d220-dc6b-49c4-8d15-c727c208a69f",
+              "leftValue": "={{ $('Output Parser').item.json.user_registered }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2640,
+        -704
+      ],
+      "id": "22994116-1870-46a3-8da3-6b0b63db32dd",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.message.voice.mime_type }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "3962e67d-a5e7-4196-9aa4-2b9c05374482"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0de4ed56-5015-483d-a950-14a205ffc937",
+                    "leftValue": "={{ $('Webhook').item.json.body.message.voice.mime_type }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        -560
+      ],
+      "id": "9c6123d5-546a-4816-b7a2-cb3189baafff",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Webhook').item.json.body.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        -480
+      ],
+      "id": "eb1b83a5-f884-4c8e-bddf-e1ee636d1d9e",
+      "name": "Get a file",
+      "webhookId": "9b6a92a3-3225-44fe-ae90-9226129f178e",
+      "credentials": {
+        "telegramApi": {
+          "id": "3eKKzlxm9WjOAqDA",
+          "name": "@munimai_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('.env').item.json.GROQ_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "temperature",
+              "value": "0"
+            },
+            {
+              "name": "response_format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1056,
+        -480
+      ],
+      "id": "205e185d-d7f6-4b2b-bfa9-3c51be7afec2",
+      "name": "Analyze Voice"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all items (just in case)\nfor (const item of $input.all()) {\n  // Check if binary data exists (usually called 'data' from Telegram)\n  if (item.binary && item.binary.data) {\n    // Force the filename to one Groq accepts\n    item.binary.data.fileName = 'voice_note.opus';\n    item.binary.data.fileExtension = 'opus';\n    item.binary.data.mimeType = 'audio/ogg';\n  }\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -480
+      ],
+      "id": "e601ef00-63fc-4734-9018-7476792930c0",
+      "name": "Extention Fixer"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n## 🔹 PROMPT: MUNIM – MINIMAL INTENT CLASSIFIER\n\nYou are **Munim**, an **intent classifier** for Indian business queries.\n\nYou **ONLY**:\n\n* classify query type\n* convert input to English\n* summarize user intent briefly\n\nUser Input: `{{ $('Text Merger').item.json.input }}`\n\n---\n\n## 🔹 YOUR TASK (STRICT ORDER)\n\n### 1️⃣ Classify Query Type\n\nChoose **ONE**:\n\n* `WRITE` → user wants to record something\n* `READ` → user wants to check/ask something\n* `GENERAL` → greeting, confirmation needed, unclear, insufficient data\n\n⚠️ If **any confirmation is needed** → `GENERAL`\n\n---\n\n### 2️⃣ Convert User Input\n\n* Keep original text\n* Convert to **pure English**\n* No assumptions\n\n---\n\n### 3️⃣ Decide Output\n\n---\n\n## 🔹 OUTPUT FORMAT (STRICT)\n\n### 🟡 GENERAL\n\nUse this for:\n\n* greetings\n* unclear intent\n* insufficient info\n* confirmation needed (amount/name/spelling/etc.)\n\n\n{\n  \"type\": \"GENERAL\",\n  \"reply\": \"Reply in user's language (English letters, Hinglish if Hindi)\"\n}\n\n\n### 🟢 READ / WRITE\n\nUse this **only when intent is clear**.\n\n\n{\n  \"type\": \"READ | WRITE\",\n  \"user_input_original\": \"string\",\n  \"user_input_english\": \"string\",\n  \"user_intent_summary\": \"Brief one-line description of what user wants with the requested intent along with the previous chat context as well\",\n  \"note\": \"There may be name spelling ambiguity; confirmation may be required if unsure\",\n  \"loading_state\": \"Like getting data... or saving data.... etc. as per the intent (with relevent emojis)\",\n}\n\n\n## ❌ HARD RULES\n\n* JSON only\n* No extra fields\n* No DB logic\n* No validation\n* No assumptions\n* No execution\n\n\n",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1792,
+        -304
+      ],
+      "id": "521488dd-3735-4d95-9e75-4d296c08fc0d",
+      "name": "Intent Generator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read the wrapped JSON string exactly from where you said\nlet raw = $input.first().json.output;\n\n// At this point raw is a STRING like: ```json\\n{ ... }\\n```\n\n// Remove code fences\nraw = raw\n  .replace(/^```json\\s*/i, '')\n  .replace(/```$/, '')\n  .trim();\n\n// Convert escaped newlines into real newlines (critical)\nraw = raw.replace(/\\\\n/g, '\\n');\n\n// Parse into real JSON\nconst parsed = JSON.parse(raw);\n\n// Return clean JSON\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -304
+      ],
+      "id": "56066e38-9293-41ee-9bf5-1e894b767122",
+      "name": "Output Parser Gen"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Output Parser Gen').item.json.type }}",
+                    "rightValue": "GENERAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "352723c7-fd64-44c2-b41f-be50bfda3fac"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "General Chat"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ae6ada2b-da9f-4ace-ba96-291c4aa61bd4",
+                    "leftValue": "={{ $json.action_type }}",
+                    "rightValue": "GENERAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Others"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2640,
+        -304
+      ],
+      "id": "d2fea98a-3cc0-4772-b8dd-a28a16f326a9",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('.env').item.json.BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.from.id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Output Parser Gen').item.json.reply }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2864,
+        -496
+      ],
+      "id": "ea217131-c78d-4454-886b-7a58b100df88",
+      "name": "Send Message1"
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-large-preview:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -80
+      ],
+      "id": "208637a0-9dcb-4898-877e-945f0b8d2898",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "beFqjU4MXWzbdDG4",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -80
+      ],
+      "id": "a7ada4e7-809b-473b-a944-f3fa7dab80ec",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "beFqjU4MXWzbdDG4",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Safely extract voice input\nconst voiceInput =\n  $input.first().json.text ?? null;\n\n// Safely extract text input\nconst textInput =\n  $items(\"Webhook\", 0)?.[0]?.json?.body?.message?.text ?? null;\n\n// Decide which one to use (priority: voice > text)\nconst finalInput = voiceInput || textInput;\n\nreturn [\n  {\n    json: {\n      input: finalInput,\n      source: voiceInput ? \"voice\" : \"text\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -560
+      ],
+      "id": "87cd0c5a-b99b-42d5-b312-7e803a548093",
+      "name": "Text Merger"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=munim.ai-{{ $('Webhook').item.json.body.message.chat.id }}",
+        "collectionName": "history",
+        "databaseName": "Chat",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        -80
+      ],
+      "id": "7985eb04-2c4d-4ff4-b362-fab6f93a741f",
+      "name": "MongoDB Chat Memory1",
+      "credentials": {
+        "mongoDb": {
+          "id": "7ULy7NtaZTeFYbPC",
+          "name": "MongoDB main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "arcee-ai/trinity-large-preview:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        64
+      ],
+      "id": "315d224e-a368-4d08-b9ff-46200f918028",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "beFqjU4MXWzbdDG4",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        3680,
+        64
+      ],
+      "id": "a70a69b4-25d8-46eb-a04c-c01c3cce61a4",
+      "name": "OpenRouter Chat Model4",
+      "credentials": {
+        "openRouterApi": {
+          "id": "beFqjU4MXWzbdDG4",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n\nYou are **Munim Executor**, a **strict data analysis and structuring agent**.\n\nYour role is **execution-only**.\nYou operate entirely on **already provided inputs** and **existing database data**.\n\n---\n\n## 🔹 WHAT YOU RECEIVE\n\nYou will receive **exactly two inputs**:\n\n### 1️⃣ Intent Metadata (from Munim Classifier)\n\n```json\n{\n  \"type\": \"{{ $('Output Parser Gen').item.json.type }}\",\n  \"user_input_english\": \"{{ $('Output Parser Gen').item.json.user_input_english }}\",\n  \"user_intent_summary\": \"{{ $('Output Parser Gen').item.json.user_intent_summary }}\",\n  \"note\": \"{{ $('Output Parser Gen').item.json.note }}\"\n}\n```\n\n### 2️⃣ Database Data (already fetched by system)\n\n```json\n{{ JSON.stringify($json.data) }}\n```\n\n---\n\n## 🔹 WHAT YOU DO NOT DO (ABSOLUTE)\n\nYou **MUST NOT**:\n\n* classify or reclassify intent\n* ask questions\n* fetch data\n* guess missing values\n* infer or invent schema fields\n* change table or column names\n* pluralize, alias, or rename columns\n* modify schema structure\n* include meta keys inside `data` objects\n\n---\n\n## 🔹 WHAT YOU DO (ONLY)\n\nYou **ONLY**:\n\n* analyze provided database data\n* strictly follow the given SQL schema\n* generate final **READ** responses\n* prepare exact **WRITE / UPDATE** payloads\n* decide **NEW vs UPDATE** strictly from DB data\n* generate intent-based confirmation messages\n* generate **PDF instructions if intent is to generate a PDF**\n\n---\n\n## 🔹 CRITICAL SCHEMA AWARENESS\n\nYou are provided with the **actual SQL schema** (source of truth).\n\n### 🚨 Mandatory Constraints\n\n* `table` name **must exactly match** schema\n* Every column in `data` **must exactly match** schema\n* No extra fields, no missing fields\n* No meta keys (`type`, `intent`, `table`, etc.) inside `data`\n\nSchema violations are **not allowed**.\n\n---\n\n## 🔹 TASK EXECUTION FLOW (STRICT ORDER)\n\n### 1️⃣ Evaluate Intent Type\n\n* If `READ` → generate **final answer using DB data**\n* If `WRITE` → decide **UPDATE vs NEW INSERT** using DB data only\n* Apply changes **only where logically required by intent**\n\n---\n\n## 🔹 OUTPUT RULES\n\n### 🟢 IF INTENT = READ\n\nReturn **final result only**, derived strictly from DB data.\n\n```json\n{\n  \"type\": \"READ_RESULT\",\n  \"summary\": \"Clear, human-readable summary derived strictly from DB data\",\n  \"data\": [\n    {\n      \"row_id\": number,\n      \"table\": \"exact_table_name\",\n      \"fields\": {\n        \"exact_column_name\": \"value\"\n      }\n    }\n  ]\n}\n```\n\n**Rules**:\n\n* Include all rows if multiple exist\n* If no rows → summary must say **“No records found”**\n* No advice, no commentary, no assumptions\n\n---\n\n### 🔵 IF INTENT = WRITE\n\nYou **must** decide between **UPDATE** or **NEW INSERT**.\n\n---\n\n#### ✅ Case 1: Existing Row → UPDATE\n\n```json\n{\n  \"type\": \"WRITE_PAYLOAD\",\n  \"write_type\": \"update\",\n  \"table\": \"exact_table_name\",\n  \"row_id\": number,\n  \"data\": {\n    \"exact_column_name\": \"value\"\n  },\n  \"confirmation\": \"Intent-based confirmation like Customer updated successfully 😊\"\n}\n```\n\n---\n\n#### ✅ Case 2: No Existing Row → NEW INSERT\n\n```json\n{\n  \"type\": \"WRITE_PAYLOAD\",\n  \"write_type\": \"new\",\n  \"table\": \"exact_table_name\",\n  \"data\": {\n    \"exact_column_name\": \"value\",\n    \"shopid\": \"{{ $('Webhook').item.json.body.message.chat.id }}\"\n  },\n  \"confirmation\": \"Intent-based confirmation like Customer added successfully 🎉\"\n}\n```\n\n**Confirmation Rules**:\n\n* Friendly tone\n* Emojis only if contextually appropriate\n* Message must reflect intent (added, updated, saved, recorded, etc.)\n\n---\n\n## 🧾 PDF / REPORT GENERATION (MANDATORY WHEN REQUESTED)\n\nIf user intent is to generate an **invoice, receipt, statement, report or any PDF**, this section is **mandatory**.\n\nYou **MUST**:\n\n* Use **only already-fetched DB data**\n* Use **only schema-valid fields**\n* Compile everything into **one single paragraph**\n* Output a **PDF generation payload**\n\nYou **MUST NOT**:\n\n* Fetch additional data\n* Invent values\n* Leave fields empty\n* Output multiple paragraphs\n\n---\n\n### ✅ REQUIRED PDF OUTPUT FORMAT\n\n```json\n{\n  \"type\": \"GENERATE_PDF\",\n  \"format\": \"\"INVOICE\", \"DAILY_REPORT\", or \"LEDGER_STATEMENT\"\",\n  \"data\": \"A single, well-structured paragraph containing all relevant schema-valid information required to generate the requested document (business name, customer details, transactions, dates, totals, currency, etc.), formatted clearly for PDF generation.\",\n  \"user_intent\": \"what actually user asked for..\",\n  \"forcustomer\": true or false (if the data is requested for the customer like invoice and bill then set true and if it is for personal calculation then false),\n  \"whatsapp_link\": https://wa.me/(phone number of the customer should be added 91 if not present before)?text=(text for the user with a demo file link that should be $$$file_url and also adda payment link https://razorpay.me/@akaza)(payment link must be added if the billing status is pending and the format is invoice)\n}\n```\n\n### 📌 PDF RULES\n\n* `type` must always be `\"GENERATE_PDF\"`\n* `data` must be **one paragraph only**\n* Paragraph must be **fully self-contained**\n* Use **only database-derived values**\n* Confirmation must reflect document type\n* No additional keys allowed\n* Include this output **only if explicitly requested**\n\n---\n\n## 🧱 DATABASE SQL SCHEMA (SOURCE OF TRUTH)\n\n*(Unchanged — must be followed exactly)*\n\n\n```sql\nCREATE TABLE public.customers (\n  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL UNIQUE,\n  name text NOT NULL,\n  phone text,\n  trust_score integer DEFAULT 100,\n  created_at timestamp with time zone DEFAULT now(),\n  CONSTRAINT customers_pkey PRIMARY KEY (id)\n);\n\nCREATE TABLE public.daily_closing (\n  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,\n  user_id bigint,\n  declared_cash numeric,\n  system_calculated_cash numeric,\n  discrepancy numeric,\n  closing_date date DEFAULT CURRENT_DATE,\n  created_at timestamp with time zone DEFAULT now(),\n  CONSTRAINT daily_closing_pkey PRIMARY KEY (id),\n  CONSTRAINT daily_closing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)\n);\n\nCREATE TABLE public.ledger (\n  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,\n  user_id bigint,\n  customer_id bigint,\n  amount numeric NOT NULL,\n  type text CHECK (type = ANY (ARRAY['credit','debit','expense'])),\n  status text DEFAULT 'pending' CHECK (status = ANY (ARRAY['pending','paid','cancelled'])),\n  description text,\n  payment_method text,\n  due_date date,\n  created_at timestamp with time zone DEFAULT now(),\n  CONSTRAINT ledger_pkey PRIMARY KEY (id),\n  CONSTRAINT ledger_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),\n  CONSTRAINT ledger_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id)\n);\n\nCREATE TABLE public.users (\n  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,\n  telegram_chat_id text NOT NULL UNIQUE,\n  business_name text,\n  currency text DEFAULT 'INR',\n  created_at timestamp with time zone DEFAULT now(),\n  upi-id text,\n  name text NOT NULL,\n  mobile_number text,\n  CONSTRAINT users_pkey PRIMARY KEY (id)\n);\n```\n\n\n---\n\n## ❌ HARD RULES (NON-NEGOTIABLE)\n\n* JSON ONLY\n* Single final output\n* No explanations\n* No intent reclassification\n* No assumptions\n* No schema violations\n* No missing-field handling\n* No side effects outside intent\n* No extra wording outside JSON\n\n--\n",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3536,
+        -176
+      ],
+      "id": "c66dd912-4694-420b-86e1-88fd42b381ae",
+      "name": "Database Manager"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "customers",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "shopid",
+              "condition": "eq",
+              "keyValue": "={{ $json.result.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        -304
+      ],
+      "id": "5ead186a-c56a-4cca-acb3-f16f669e04b8",
+      "name": "Get Customers",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "ledger",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "shopid",
+              "condition": "eq",
+              "keyValue": "={{ $json.result.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        -112
+      ],
+      "id": "d83af639-b109-4e7b-a686-f0bff569f12d",
+      "name": "Get Ledger",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "daily_closing",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "shopid",
+              "condition": "eq",
+              "keyValue": "={{ $json.result.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        80
+      ],
+      "id": "7df8f97b-e88c-4f29-ba05-525ba99b147c",
+      "name": "Get Closing",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3312,
+        -176
+      ],
+      "id": "042e613f-9a49-45c5-a6c8-24cb7071206a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3088,
+        -192
+      ],
+      "id": "96911948-1531-42a3-bb0a-6f4957116461",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "READ_RESULT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6c202fd1-9f30-4185-ad48-0d06601fb20c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Read"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cdc42dfa-7c0a-4c40-9665-d647c5136b70",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "WRITE_PAYLOAD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Write"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9d4f0f67-9e3f-4635-b8c3-3bdafad68438",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "GENERATE_PDF",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4112,
+        -192
+      ],
+      "id": "c6337608-c745-49bd-9621-6ee061016197",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read the wrapped JSON string exactly from where you said\nlet raw = $input.first().json.output;\n\n// At this point raw is a STRING like: ```json\\n{ ... }\\n```\n\n// Remove code fences\nraw = raw\n  .replace(/^```json\\s*/i, '')\n  .replace(/```$/, '')\n  .trim();\n\n// Convert escaped newlines into real newlines (critical)\nraw = raw.replace(/\\\\n/g, '\\n');\n\n// Parse into real JSON\nconst parsed = JSON.parse(raw);\n\n// Return clean JSON\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3888,
+        -176
+      ],
+      "id": "70a03825-0f2c-4672-b896-d022cb064dc8",
+      "name": "Output Parser Gen1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('.env').item.json.BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.from.id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Output Parser Gen1').item.json.summary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4400,
+        -448
+      ],
+      "id": "0886b951-c37e-4a46-97fb-4dcb1bfd49e1",
+      "name": "Send Message2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('.env').item.json.BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.from.id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.loading_state }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2416,
+        -304
+      ],
+      "id": "2a056c8e-74f0-4380-866f-5304d76eff71",
+      "name": "Send Loading state",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4f42833f-df60-4d1d-9c40-f1933569edae",
+              "leftValue": "={{ $('Output Parser Gen1').item.json.write_type }}",
+              "rightValue": "new",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4688,
+        -256
+      ],
+      "id": "b1e6ee30-476c-417c-bc18-c56f4b4d157a",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "tableId": "={{ $('Output Parser Gen1').item.json.table }}",
+        "dataToSend": "autoMapInputData",
+        "inputsToIgnore": "="
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4912,
+        -352
+      ],
+      "id": "ae7ab99f-e101-482a-8843-32f7f53d18ac",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract only the `data` object and return it as the new item\nreturn [\n  {\n    json: $json.data\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        -256
+      ],
+      "id": "0a0a4ddc-d83d-45af-9dc2-2557909402f9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "={{ $('Output Parser Gen1').item.json.table }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Output Parser Gen1').item.json.row_id }}"
+            }
+          ]
+        },
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4912,
+        -160
+      ],
+      "id": "8dd96a3e-fec6-4ace-a45b-e02f568b360f",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "sBE0nAtv4GIWw93i",
+          "name": "Munim.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('.env').item.json.BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.from.id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Output Parser Gen1').item.json.confirmation }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5136,
+        -256
+      ],
+      "id": "a7878257-ab45-4402-86eb-5a13b3f48c1f",
+      "name": "Send Message3",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Extract the dynamic HTML string from the previous node\n// Ensure the previous node actually outputs a field named \"html\"\nconst htmlContent = $input.first().json.html_string;\n\n// (Optional) Get a filename if you generated one, otherwise default\nconst outputFileName = $input.first().json.fileName || 'Invoice_Document.pdf';\n\n// Safety Check: If no HTML came in, throw an error so you don't send empty files\nif (!htmlContent) {\n  throw new Error(\"No 'html' field found in the input! Check your previous node.\");\n}\n\n// 2. Convert the HTML String to Binary Data (Base64)\n// This creates the \"Virtual File\" in memory\nconst binaryData = Buffer.from(htmlContent).toString('base64');\n\n// 3. Output structure for the HTTP Request Node\nreturn {\n  json: {\n    // Pass the desired output filename along for the next step (Telegram)\n    outputFileName: outputFileName\n  },\n  binary: {\n    // The key 'index_file' is what you will select in the HTTP node\n    index_file: {\n      data: binaryData,\n      mimeType: 'text/html',\n      fileName: 'index.html' // CRITICAL: Gotenberg demands this specific internal filename\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4912,
+        80
+      ],
+      "id": "867e2a6e-c519-4bd7-acbd-89011c26f8b5",
+      "name": "Text to Binary"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ashik05-html-to-pdf.hf.space/forms/chromium/convert/html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index_file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5136,
+        80
+      ],
+      "id": "72a5d913-4d26-4602-b7f7-f194f50e7416",
+      "name": "html to pdf",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FHsNxfPJrS7zldG0",
+          "name": "Hugging Face"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $('Output Parser Gen2').item.json.caption }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5584,
+        256
+      ],
+      "id": "1329e6c4-8b90-459c-b195-771501005437",
+      "name": "Send a document",
+      "webhookId": "24e9fd0d-3bf6-485e-9e54-d2f303b04031",
+      "credentials": {
+        "telegramApi": {
+          "id": "3eKKzlxm9WjOAqDA",
+          "name": "@munimai_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4352,
+        304
+      ],
+      "id": "381a4329-c13a-4de8-8477-eef6b17df4fc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "f7OMUQbv8xb2lFaH",
+          "name": "Laden 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the **Document Designer Engine** for 'Munim.AI', a professional AI accountant.\nYour goal is to generate **Print-Ready HTML** in the json wraped format given, with embedded CSS for PDF conversion.\n\n### YOUR INPUT DATA\nYou will receive a JSON object with:\n1. `document_type`: {{ $json.format }}\n2. `user_intent`: {{ $json.user_intent }}\n3. `data`: {{ $json.data }}\n4. Current Date : {{ $('Send Loading state').item.json.result.date }}\n\n### 1. DESIGN SPECIFICATIONS (CSS)\nEmbed this EXACT CSS in the `<style>` block:\n- **Page Layout:** `@page { size: A4; margin: 15mm; } body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.5; font-size: 12px; }`\n- **Header:** Flexbox layout. Logo/Brand name on left (Font size 24px, Bold, Color: #2563eb). Invoice details on right (Text-align: right).\n- **Tables:** `width: 100%; border-collapse: collapse; margin-top: 20px;`\n- **Table Headers:** `background-color: #f3f4f6; color: #111; font-weight: bold; text-align: left; padding: 10px; border-bottom: 2px solid #e5e7eb;`\n- **Table Cells:** `padding: 10px; border-bottom: 1px solid #eee;`\n- **Totals Section:** `margin-top: 30px; text-align: right; font-size: 14px;`\n- **Grand Total:** `font-size: 18px; font-weight: bold; color: #2563eb;`\n- **Footer:** `position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #aaa; border-top: 1px solid #eee; padding-top: 10px;`\n- **Utility:** `.text-right { text-align: right; } .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; } .paid { background: #d1fae5; color: #065f46; } .due { background: #fee2e2; color: #991b1b; }`\n\n### 2. LOGIC GENERATORS\n\n**A. Invoice Numbering:**\nIf `invoice_no` is missing in input, generate one using this logic:\n`INV-[YYYY][MM][DD]-[USER_ID_LAST_3]-[RANDOM_HEX_2]`\n*Example:* `INV-20260204-058-A7`\n\n**B. Document Logic:**\n\n**IF `document_type` == \"INVOICE\":**\n- **Top Section:** Shop Details (Left) vs Customer Details (Right).\n- **Table Columns:** # | Item Description | Type | Qty | Price | Total\n- **Smart Status:** If `transaction_type` is 'credit' (Received), show a **[PAID]** badge. If 'debit' (Given), show **[PAYMENT DUE]**.\n- **Footer Note:** \"Thank you for your business. Computer generated invoice.\"\n\n**IF `document_type` == \"DAILY_REPORT\":**\n- **Title:** \"End of Day Report - [Date]\"\n- **Dashboard Grid:** Create 3 boxes at top:\n  1. Total Sales (Green)\n  2. Total Expenses (Red)\n  3. Cash in Hand (Blue)\n- **Table:** Detailed list of all transactions today.\n\n### YOUR OUTPUT (Strict JSON)\nReturn **ONLY** a raw JSON object. No markdown.\n\n{\n  \"html_string\": \"The full HTML string with embedded CSS\",\n  \"caption\": \"The text message to be sent to the Business Owner on Telegram\"\n}\n\n### 3. CRITICAL RULES\n- **Rupee Symbol:** Always use **₹** for currency.\n- **Dates:** Format dates as `DD MMM, YYYY` (e.g., 04 Feb, 2026).\n- **Empty State:** If an item description is missing, use \"General Item\".\n\n",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4336,
+        80
+      ],
+      "id": "c7a778fc-37a0-4d60-ac99-cbb9433bcbf6",
+      "name": "PDF Generator"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4480,
+        304
+      ],
+      "id": "97da2474-2cad-49e9-94af-e499b41e3cbd",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "f7OMUQbv8xb2lFaH",
+          "name": "Laden 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items\nreturn $input.all().map(item => {\n  let rawOutput = item.json.output;\n\n  // 1. Safety Check: If output is undefined, return empty\n  if (!rawOutput) {\n    return { json: { error: \"No output found\" } };\n  }\n\n  // 2. Clean the string (in case AI added markdown like ```json)\n  // This removes ```json at the start and ``` at the end\n  let cleanString = rawOutput\n    .replace(/```json/g, \"\") // Remove start tag\n    .replace(/```/g, \"\")     // Remove end tag\n    .trim();                 // Remove extra whitespace\n\n  try {\n    // 3. Parse the string into a real JSON Object\n    const parsedData = JSON.parse(cleanString);\n\n    // Return the clean structure\n    return {\n      json: {\n        html_string: parsedData.html_string,\n        caption: parsedData.caption\n      }\n    };\n\n  } catch (error) {\n    // If parsing fails, return the error and the raw string for debugging\n    return {\n      json: {\n        error: \"JSON Parse Failed\",\n        details: error.message,\n        raw_string: cleanString\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4688,
+        80
+      ],
+      "id": "6f8934a4-8dea-49e7-87f6-de7b984b7bb2",
+      "name": "Output Parser Gen2"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "binaryData": true,
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📲 Send to Customer",
+                    "additionalFields": {
+                      "url": "={{ $('URL Parser').item.json.final_whatsapp_link }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "caption": "={{ $('Output Parser Gen2').item.json.caption }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6480,
+        -16
+      ],
+      "id": "9269f331-5c6f-41aa-98ac-dabe0647bd15",
+      "name": "Send a document1",
+      "webhookId": "24e9fd0d-3bf6-485e-9e54-d2f303b04031",
+      "credentials": {
+        "telegramApi": {
+          "id": "3eKKzlxm9WjOAqDA",
+          "name": "@munimai_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Retrieve the WhatsApp Template\nconst templateLink = $('Output Parser Gen1').first()?.json?.whatsapp_link || \"\";\n\n// 2. RETRIEVE DATA CORRECTLY (The Fix)\n// We fetch the JSON data from previous nodes using standard JS, not {{ }}\nconst webhookData = $('Webhook').first().json;\nconst loadingData = $('Send Loading state').first().json;\n\n// Safe access to variables (prevents crash if data is missing)\nconst chatId = webhookData.body?.message?.chat?.id || \"unknown_chat\";\nconst dateStr = loadingData.result?.date || \"unknown_date\";\n\n// Construct the URL using Backticks (Template Literal)\nconst realFileUrl = `https://pub-75545ea5a8574567973a67a58441479b.r2.dev/${chatId}${dateStr}.pdf`;\n\nconst realPaymentUrl = \"https://razorpay.me/@akaza\"; \n\n// 3. Logic to Reconstruct and Encode\nlet finalWhatsappLink = \"\";\n\nif (templateLink) {\n  // Step A: Split the URL\n  const splitIndex = templateLink.indexOf(\"?text=\");\n  \n  if (splitIndex !== -1) {\n    const baseUrl = templateLink.substring(0, splitIndex + 6); \n    let rawMessage = templateLink.substring(splitIndex + 6);   \n    \n    // Step B: Decode first\n    try {\n      rawMessage = decodeURIComponent(rawMessage);\n    } catch (e) {\n      // If decode fails, use as is\n    }\n\n    // Step C: Perform Replacements\n    // We use the variables we created above\n    rawMessage = rawMessage.replace(/\\$\\$\\$file_url/g, realFileUrl);\n    rawMessage = rawMessage.replace(/\\$\\$\\$payment_url/g, realPaymentUrl);\n\n    // Step D: ENCODE the full message\n    const encodedMessage = encodeURIComponent(rawMessage);\n\n    // Step E: Recombine\n    finalWhatsappLink = baseUrl + encodedMessage;\n    \n  } else {\n    // Fallback\n    finalWhatsappLink = templateLink;\n  }\n}\n\n// 4. Output\nreturn {\n  json: {\n    final_whatsapp_link: finalWhatsappLink,\n    debug_url: realFileUrl // Use this to verify the link is built correctly\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5808,
+        64
+      ],
+      "id": "2e76158f-6bc2-4d24-9189-4a74f3d440e6",
+      "name": "URL Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0ee59808-694e-4adb-9fc7-e33036f22cfa",
+              "leftValue": "={{ $('Output Parser Gen1').item.json.forcustomer }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5360,
+        160
+      ],
+      "id": "69a90025-ed66-4ab6-a259-fd337bc90fe8",
+      "name": "If3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        6032,
+        -16
+      ],
+      "id": "81c9789e-017f-4ea4-8040-f27da18c5212",
+      "name": "Merge1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        6256,
+        -16
+      ],
+      "id": "a987d091-6621-4432-a085-e13eac8cd3b5",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "personal",
+        "fileName": "={{ $('Webhook').item.json.body.message.chat.id }}{{ $('Send Loading state').item.json.result.date }}.pdf",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        5584,
+        64
+      ],
+      "id": "01c2cf05-5bba-4d6f-ba68-25aedf44f782",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "Ispd25utaUK2Dnpr",
+          "name": "S3 (R2)"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.akaza.in",
+            "x-real-ip": "91.108.5.20",
+            "x-forwarded-for": "91.108.5.20",
+            "x-forwarded-proto": "https",
+            "content-length": "298",
+            "content-type": "application/json",
+            "accept-encoding": "gzip, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "update_id": 117651645,
+            "message": {
+              "message_id": 329,
+              "from": {
+                "id": 7418188269,
+                "is_bot": false,
+                "first_name": "Ashik",
+                "username": "trueashik",
+                "language_code": "en"
+              },
+              "chat": {
+                "id": 7418188269,
+                "first_name": "Ashik",
+                "username": "trueashik",
+                "type": "private"
+              },
+              "date": 1771148827,
+              "text": "Now add rishiraj to the db"
+            }
+          },
+          "webhookUrl": "https://n8n.akaza.in/webhook/register-user-neurathon",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": ".env",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search User": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Onboard User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Intent Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Onboard User",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Onboard User",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Onboard User",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Onboard User": {
+      "main": [
+        [
+          {
+            "node": "Output Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    ".env": {
+      "main": [
+        [
+          {
+            "node": "Search User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create user": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Create user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Text Merger",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Extention Fixer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extention Fixer": {
+      "main": [
+        [
+          {
+            "node": "Analyze Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Voice": {
+      "main": [
+        [
+          {
+            "node": "Text Merger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Generator": {
+      "main": [
+        [
+          {
+            "node": "Output Parser Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser Gen": {
+      "main": [
+        [
+          {
+            "node": "Send Loading state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Send Message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Customers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Ledger",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Closing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intent Generator",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intent Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Merger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Intent Generator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Database Manager",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Database Manager",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Database Manager": {
+      "main": [
+        [
+          {
+            "node": "Output Parser Gen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customers": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ledger": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Closing": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Database Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser Gen1": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Send Message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PDF Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Loading state": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Send Message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Send Message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text to Binary": {
+      "main": [
+        [
+          {
+            "node": "html to pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "html to pdf": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PDF Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Generator": {
+      "main": [
+        [
+          {
+            "node": "Output Parser Gen2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PDF Generator",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Output Parser Gen2": {
+      "main": [
+        [
+          {
+            "node": "Text to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL Parser": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a document": {
+      "main": [
+        []
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Send a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "URL Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "582e2e41-bd6f-4530-8179-70a3315c8627",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1db00767d94e64addde25a63065d7248386a40ebaf7c48d18d1a953b3e73fe0c"
+  },
+  "id": "vWxVT8pUcshETFPao74--",
+  "tags": []
+}
